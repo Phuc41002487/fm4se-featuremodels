@@ -33,7 +33,7 @@ public class LimbooleExecutor {
    * @param args
    */
   public static void main(String[] args) {
-    String formula = "a & !a";
+    String formula = "(car -> motor) | (comfort -> car)";
     try {
       System.out.println(runLimboole(formula, true));
     } catch (Exception e) {
