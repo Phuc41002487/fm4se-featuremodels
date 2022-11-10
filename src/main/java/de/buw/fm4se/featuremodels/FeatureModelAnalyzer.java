@@ -15,7 +15,7 @@ import de.buw.fm4se.featuremodels.fm.FeatureModel;
  */
 public class FeatureModelAnalyzer {
 
-  public static boolean checkConsistent(FeatureModel fm) throws Exception {
+  public static boolean checkConsistent(FeatureModel fm) {
     String formula = FeatureModelTranslator.translateToFormula(fm);
     String result;
     try {
@@ -30,53 +30,67 @@ public class FeatureModelAnalyzer {
     return true;
   }
 
-  public static List<String> deadFeatureNames(FeatureModel fm) throws Exception {
+  public static List<String> deadFeatureNames(FeatureModel fm) {
     List<String> deadFeatures = new ArrayList<>();
-    //addDeadFeature(fm, fm.getRoot(), deadFeatures);
-    addDeadFeature(fm.getRoot(), deadFeatures, fm.getConstraints());
     // TODO check for dead features
+    addDeadFeature(fm, fm.getRoot(), deadFeatures);
     return deadFeatures;
   }
 
-  private static void addDeadFeature(FeatureModel featureModel, Feature feature, List<String> deadFeatures) throws Exception {
+
+  /**
+   * @param featureModel feature model
+   * @param feature feature
+   * @param deadFeatures list of dead features
+   * The function add dead feature to the list
+   */
+  private static void addDeadFeature(FeatureModel featureModel, Feature feature, List<String> deadFeatures) {
     featureModel.setRoot(feature);
     if(!checkConsistent(featureModel)){
-      deadFeatures.add(feature.getName());
-    }
-    for (Feature child : feature.getChildren()) {
-      addDeadFeature(featureModel, child, deadFeatures);
+      addAllFeatureToDead(feature, deadFeatures);
+    } else {
+      for (Feature child : feature.getChildren()) {
+        addDeadFeature(featureModel, child, deadFeatures);
+      }
     }
   }
 
-  private static void addDeadFeature(Feature feature, List<String> deadFeatures, List<CrossTreeConstraint> constraints) throws Exception {
-    FeatureModel tempModel = new FeatureModel();
-    tempModel.setRoot(feature);
-    for(CrossTreeConstraint constraint : constraints) {
-      tempModel.addConstraint(constraint);
-    }
-    if(!checkConsistent(tempModel)){
-      deadFeatures.add(feature.getName());
-    }
+  /**
+   * @param feature input
+   * @param deadFeatures list of dead feature
+   * The function add the feature and all children of it to dead feature list
+   */
+  private static void addAllFeatureToDead(Feature feature, List<String> deadFeatures) {
+    deadFeatures.add(feature.getName());
     for (Feature child : feature.getChildren()) {
-      addDeadFeature(child, deadFeatures, constraints);
+      addAllFeatureToDead(child, deadFeatures);
     }
   }
 
   public static List<String> mandatoryFeatureNames(FeatureModel fm) {
     List<String> mandatoryFeatures = new ArrayList<>();
 
+    mandatoryFeatures.add(fm.getRoot().getName());
     // TODO check for mandatory features
-    addMandatoryChildren(fm.getRoot(), mandatoryFeatures);
+    for (Feature child : fm.getRoot().getChildren()) {
+      addMandatoryChildren(child, mandatoryFeatures);
+    }
     return mandatoryFeatures;
   }
 
+
+  /**
+   * @param feature feature
+   * @param mandatoryFeatures mandatory feature list
+   * The function add mandatory feature to the list
+   */
   private static void addMandatoryChildren(Feature feature, List<String> mandatoryFeatures) {
     if(feature.isMandatory()) {
       mandatoryFeatures.add(feature.getName());
-    }
-    /* Check children */
-    for (Feature childFeature : feature.getChildren()) {
-      addMandatoryChildren(childFeature, mandatoryFeatures);
+      /* Check children */
+      for (Feature childFeature : feature.getChildren()) {
+        addMandatoryChildren(childFeature, mandatoryFeatures);
+      }
     }
   }
 }
